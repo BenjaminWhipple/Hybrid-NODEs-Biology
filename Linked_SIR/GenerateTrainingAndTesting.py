@@ -22,25 +22,9 @@ else:
 
 # If GPU acceleration is available
 gpu=0
-global device
 device = torch.device('cuda:' + str(gpu) if torch.cuda.is_available() else 'cpu')
 if torch.cuda.is_available():
   torch.set_default_tensor_type('torch.cuda.FloatTensor')
-
-# Utility Fns
-
-def get_n_params(model):
-    pp=0
-    for p in list(model.parameters()):
-        nn=1
-        for s in list(p.size()):
-            nn = nn*s
-        pp += nn
-    return pp
-
-### End Boilerplate code.
-
-### DATA GENERATION ###
 
 ### TRUE MODEL
 class LinkedSIR(nn.Module):

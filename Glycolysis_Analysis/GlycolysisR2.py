@@ -29,7 +29,6 @@ else:
 
 # If GPU acceleration is available
 gpu=0
-global device
 device = torch.device('cuda:' + str(gpu) if torch.cuda.is_available() else 'cpu')
 if torch.cuda.is_available():
   torch.set_default_tensor_type('torch.cuda.FloatTensor')
