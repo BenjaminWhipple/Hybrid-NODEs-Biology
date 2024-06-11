@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-device = torch.device('cuda:' + str(gpu) if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 
 class unknown_params_hybridODE(nn.Module):

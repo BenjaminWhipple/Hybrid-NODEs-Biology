@@ -154,26 +154,6 @@ class pureODE(nn.Module):
         return torch.stack([dS1, dS2, dS3, dS4, dS5, dS6, dS7], dim=1).view(-1,1,7).to(device)
 
 # Data-driven model
-class neuralODE(nn.Module):
-
-    def __init__(self, network_size):
-        super(neuralODE, self).__init__()
-
-        self.net = nn.Sequential(
-            nn.Linear(7, network_size),
-            nn.Tanh(),
-            nn.Linear(network_size, 7)
-            #nn.Tanh(),
-            #nn.Linear(20, 7),
-        )
-
-        for m in self.net.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, mean=0, std=0.5)
-
-    def forward(self, t, y):
-
-        return self.net(y)
 
 # Integrated first-principles/data-driven model
 class hybridODE(nn.Module):

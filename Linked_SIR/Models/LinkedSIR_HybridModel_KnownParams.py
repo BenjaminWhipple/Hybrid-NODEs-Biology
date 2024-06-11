@@ -1,18 +1,22 @@
 import torch
 import torch.nn as nn
 
-device = torch.device('cuda:' + str(gpu) if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
 class Known_Params_HybridODE(nn.Module):
 
-    def __init__(self,structure):
+    def __init__(self,p,structure):
         super(Known_Params_HybridODE, self).__init__()
         
+        params = p
+        
+        #p = [0.3,0.2,0.1,0.1]
+        #Wrong p=[0.2,0.1,0.2,0.2]
 
-        self.beta1 = 0.3
-        self.beta2 = 0.2
-        self.gamma1 = 0.1
-        self.gamma2 = 0.1
+        self.beta1 = p[0]
+        self.beta2 = p[1]
+        self.gamma1 = p[2]
+        self.gamma2 = p[3]
         
         """
         # Testing incorrect parameters

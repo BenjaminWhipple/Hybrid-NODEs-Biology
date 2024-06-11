@@ -31,6 +31,9 @@ train_y0 = torch.tensor([[0.49, 0.01, 0.0, 0.50, 0.0, 0.0]]).to(device)
 test_y0 = torch.tensor([[0.4,0.1, 0.0, 0.45, 0.05, 0.0]]).to(device)
 test_y = torch.load("LinkedSIR_test_data.pt")
 
+#True p
+p = [0.3,0.2,0.1,0.1]
+
 # Import odeint with automatic differentiation or adjoint method
 adjoint=False
 if adjoint:
@@ -39,10 +42,11 @@ else:
     from torchdiffeq import odeint
 
 # If GPU acceleration is available
-gpu=0
-device = torch.device('cuda:' + str(gpu) if torch.cuda.is_available() else 'cpu')
-if torch.cuda.is_available():
-    torch.set_default_tensor_type('torch.cuda.FloatTensor')
+#gpu=0
+#device = torch.device('cuda:' + str(gpu) if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
+#if torch.cuda.is_available():
+#    torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 # Utility Fns
 
@@ -108,8 +112,9 @@ Attempts = []
 for size in sizes:
     for replicate in range(replicates):
         complete = False
+        attempts = 0
         while complete == False:
-            model = Known_Params_HybridODE((6,6,[size,size])).to(device)
+            model = Known_Params_HybridODE(p,(6,6,[size,size])).to(device)
             attempts += 1
             optimizer = optim.Adam(model.parameters(), lr=1e-2)
             scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1) #optional learning
