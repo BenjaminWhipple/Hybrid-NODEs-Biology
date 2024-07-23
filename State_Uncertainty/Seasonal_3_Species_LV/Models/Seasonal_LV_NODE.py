@@ -3,30 +3,19 @@ import torch.nn as nn
 
 device = torch.device('cpu')
 
-class hybridODE(nn.Module):
+class neuralODE(nn.Module):
 
-    def __init__(self, p0,structure):
-        super(hybridODE, self).__init__()
-
-        self.paramsODE = p0
-
-        self.alpha = self.paramsODE[0]
-        self.delta = self.paramsODE[-1]
+    def __init__(self,structure):
+        super(neuralODE, self).__init__()
 
         self.net = self.make_nn(structure)
 
         for m in self.net.modules():
             if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, mean=0, std=.1)
-                nn.init.constant_(m.bias, val=0)
+                nn.init.normal_(m.weight, mean=0, std=0.5)
 
     def forward(self, t, y):
-        S1 = y.view(-1,2)[:,0]
-        S2 = y.view(-1,2)[:,1]
-
-        dS1 = self.alpha*S1 #for dimensions
-        dS2 = -self.delta*S2
-        return (torch.stack([dS1, dS2], dim=1).view(-1,1,2) + self.net(y)).to(device)
+        return self.net(y)
     
     def make_nn(self, structure):
         '''
@@ -45,7 +34,7 @@ class hybridODE(nn.Module):
 
         #print(hidden_sizes)
         for i in range(num_layers):
-            print(hidden_sizes[i])
+            #print(hidden_sizes[i])
             if i==0:
                 #Add input layer
                 #print(i)
