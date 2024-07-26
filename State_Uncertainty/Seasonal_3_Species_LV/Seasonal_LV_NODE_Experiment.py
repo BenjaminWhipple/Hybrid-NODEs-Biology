@@ -179,10 +179,10 @@ attempts = 0
 complete = False
 broken = False
 
-#replicates = 50
-#sizes = [5, 10, 15, 20, 25, 30]
-replicates = 2
-sizes = [5,10]
+replicates = 50
+sizes = [5, 10, 15, 20, 25, 30]
+#replicates = 2
+#sizes = [5,10]
 #sizes = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
 Train = []
