@@ -22,25 +22,25 @@ class unknownhybridODE(nn.Module):
                 nn.init.constant_(m.bias, val=0)
 
     def forward(self, t, y):
-        S1 = y.view(-1,4)[:,0]
-        S2 = y.view(-1,4)[:,1]
-        T = y.view(-1,4)[:,2]
-        A = y.view(-1,4)[:,3]
+        S1 = y.view(-1,3)[:,0]
+        S2 = y.view(-1,3)[:,1]
+        #T = y.view(-1,4)[:,2]
+        A = y.view(-1,3)[:,2]
         
         dS1 = self.beta*S1*A - self.gamma*S1*S2
         dS2 = self.gamma*S1*S2 - self.delta*S2
 
         shape_dS1 = dS1.shape
 
-        dT = torch.tensor([1.0]).expand(shape_dS1[0])
+        #dT = torch.tensor([1.0]).expand(shape_dS1[0])
         dA = 0.0*A
 
         # These following 3 lines maintain compatibility with the torchdiffeq interface while forcing the network to only apply to the A compartment.
         shape = self.net(y).shape
-        filler = torch.full((shape[0],shape[1],3),fill_value=0)
-        net_out = torch.cat((filler,self.net(y)),dim=2)
+        filler = torch.full((shape[0],shape[1],2),fill_value=0)
+        net_out = torch.cat((filler,self.net(y)),dim=2) # Concat to get [0,0, output] to add to final result
 
-        return (torch.stack([dS1, dS2,dT,dA], dim=1).view(-1,1,4) + self.net(y)).to(device)
+        return (torch.stack([dS1, dS2,dA], dim=1).view(-1,1,3) + self.net(y)).to(device)
     
     def make_nn(self, structure):
         '''

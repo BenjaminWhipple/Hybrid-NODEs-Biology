@@ -17,7 +17,7 @@ data = torch.load("Seasonal_LV_data.pt")
 
 print(data.shape)
 
-train_data_size = 61 # Training data
+train_data_size = 91 # Training data
 
 train_y = data[:train_data_size,:,[1,2]]
 test_y = data[train_data_size:,:,[1,2]]
@@ -52,10 +52,10 @@ def get_n_params(model):
     return pp
 
 t0 = 0.
-tf = 9.
-t = torch.linspace(t0, 6.0, train_data_size).to(device)
+tf = 15.0
+t = torch.linspace(t0, 9.0, train_data_size).to(device)
 
-full_t = torch.linspace(t0, tf, 91).to(device)
+full_t = torch.linspace(t0, tf, 151).to(device)
 
 #print(full_t.shape)
 #print(data.shape)
@@ -68,108 +68,6 @@ def get_batch(batch_time, batch_size, data_size):
     batch_y = torch.stack([train_y[s + i] for i in range(batch_time)], dim=0).to(device)
     return batch_y0, batch_t, batch_y
 
-
-
-"""
-# Old code
-
-model = neuralODE((3,3,[10,10])).to(device)
-
-optimizer = optim.Adam(model.parameters(), lr=1e-2)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1) #optional learning rate scheduler
-
-start = time.time()
-
-#print("Starting training.")
-for it in range(1, niters + 1):
-    optimizer.zero_grad()
-    batch_y0, batch_t, batch_y = get_batch(batch_time, batch_size,train_data_size)
-    #print(batch_y.shape)
-    
-    batch_y0_constant = torch.full((256,1,1),fill_value=0) #For augmented NODE
-    batch_y_constant = torch.full((16,256,1,1),fill_value=0)
-    
-    batch_y0_aug = torch.cat((batch_y0, batch_y0_constant), dim=2)
-    #batch_y_aug = torch.cat((batch_y, batch_y_constant), dim=3)
-     
-    pred_y = odeint(model, batch_y0_aug, batch_t, method='rk4')    #It is advised to use a fixed-step solver during training to avoid underflow of dt
-    
-    #Now we are going to try to incorporate a better loss fn.
-    #loss = torch.mean(torch.abs(pred_y - batch_y))
-    #MAE + L1 regularization of NN params.
-    #loss = torch.mean(torch.abs(pred_y - batch_y)) + torch.sum(NN Params.)
-    #Need to figure out NN params.
-    #print(batch_y.shape)
-    #print(pred_y.shape)
-    MAE = torch.mean(torch.abs(pred_y[:,:,:,:-1] - batch_y))
-    #L1_Reg = reg_param*torch.sum(torch.tensor([torch.sum(torch.abs(i)) for i in list(model.parameters())]))
-    loss = MAE #+ L1_Reg
-    #loss = torch.sum(torch.square(pred_y - batch_y))
-
-    loss.backward()
-    optimizer.step()
-    scheduler.step()
-
-    #'''
-
-    if (it) % 100 == 0:
-        print('Iteration: ', it, '/', niters)
-        print('Loss: ', loss.item())
-    
-    #'''
-
-end = time.time()
-
-TimeTaken = end-start
-print(f'Time Taken: {TimeTaken}')
-
-NumParams = get_n_params(model)
-
-print(train_y0.shape)
-# For augmented model
-train_y0_constant = torch.full((1,1),fill_value=0)
-train_y0_aug = torch.cat((train_y0, train_y0_constant), dim=1)
-#batch_y_constant = torch.full((16,256,1,1),fill_value=0)
-#train_y0_aug
-
-pred_y = odeint(model, train_y0_aug.view(1,1,3), full_t, method='rk4').view(-1,1,3)
-
-#print(train_y.shape)
-#print(pred_y.shape)
-
-train_SSE = float(torch.sum(torch.square(pred_y[:61,:,:-1] - train_y)))
-train_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[:61,:,:-1] - train_y))))
-
-#print(train_SSE)
-#print(train_RMSE)
-
-#print(test_y.shape)
-#print(pred_y.shape)
-
-#print(test_y[150:,:,:])
-#print(pred_y[150:,:,:])
-
-test_SSE = float(torch.sum(torch.square(pred_y[61:,:,:-1] - test_y)))
-test_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[61:,:,:-1] - test_y))))
-
-print(train_RMSE)
-print(test_RMSE)
-
-plt.figure(figsize=(20, 10))
-#plt.yscale('log')
-plt.plot(full_t.detach().cpu().numpy(), data[:,0].cpu().numpy()[:,[1,2]], 'o')
-plt.plot(full_t.detach().cpu().numpy(), pred_y[:,0].detach().cpu().numpy()[:,[0,1]],alpha=0.5)
-plt.axvline(6.0,linestyle="dotted",color="r")
-plt.savefig('Seasonal_LV_testing_NODE.png')
-
-print(f'Time taken = {end-start} seconds')
-#test_pred = 
-
-# This can work well.
-"""
-
-
-#"""
 start = time.time()
 
 ### Generate ensemble of candidate models
@@ -180,60 +78,46 @@ complete = False
 broken = False
 
 replicates = 50
-sizes = [5, 10, 15, 20, 25, 30]
+sizes =  [5, 10, 15, 20, 25, 30]
 #replicates = 2
 #sizes = [5,10]
-#sizes = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+##sizes = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
 Train = []
 Test = []
 Replicates = []
 Size_Record = []
-Attempts = []
 
 for size in sizes:
     for replicate in range(replicates):
-        complete = False
-        attempts = 0
-        while complete == False:
-            model = neuralODE((3,3,[size,size])).to(device)
 
-            optimizer = optim.Adam(model.parameters(), lr=1e-2)
-            scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1) #optional learning rate scheduler
+        model = neuralODE((3,3,[size,size])).to(device)
 
-            start = time.time()
+        optimizer = optim.Adam(model.parameters(), lr=1e-2)
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1) #optional learning rate scheduler
 
-            #print("Starting training.")
-            for it in range(1, niters + 1):
-                optimizer.zero_grad()
-                batch_y0, batch_t, batch_y = get_batch(batch_time, batch_size,train_data_size)
-                #print(batch_y.shape)
-                
-                batch_y0_constant = torch.full((256,1,1),fill_value=0) #For augmented NODE
-                batch_y_constant = torch.full((16,256,1,1),fill_value=0)
-                
-                batch_y0_aug = torch.cat((batch_y0, batch_y0_constant), dim=2)
-                #batch_y_aug = torch.cat((batch_y, batch_y_constant), dim=3)
-                 
-                pred_y = odeint(model, batch_y0_aug, batch_t, method='rk4')    #It is advised to use a fixed-step solver during training to avoid underflow of dt
-                
-                MAE = torch.mean(torch.abs(pred_y[:,:,:,:-1] - batch_y))
-                loss = MAE #+ L1_Reg
+        start = time.time()
 
-                loss.backward()
-                optimizer.step()
-                scheduler.step()
-                
-                if torch.isnan(loss).item()==True:
-                    broken = True
-                    #print(f"Current Attempt: {attempts}")
-                    #print("BREAK!")
-                    break
-                else:
-                    broken = False    
-                #'''
-            if broken == False:
-                complete = True
+        #print("Starting training.")
+        for it in range(1, niters + 1):
+            optimizer.zero_grad()
+            batch_y0, batch_t, batch_y = get_batch(batch_time, batch_size,train_data_size)
+            #print(batch_y.shape)
+            
+            batch_y0_constant = torch.full((256,1,1),fill_value=0) #For augmented NODE
+            batch_y_constant = torch.full((16,256,1,1),fill_value=0)
+            
+            batch_y0_aug = torch.cat((batch_y0, batch_y0_constant), dim=2)
+            #batch_y_aug = torch.cat((batch_y, batch_y_constant), dim=3)
+             
+            pred_y = odeint(model, batch_y0_aug, batch_t, method='rk4')    #It is advised to use a fixed-step solver during training to avoid underflow of dt
+            
+            MAE = torch.sum(torch.abs(pred_y[:,:,:,:-1] - batch_y))
+            loss = MAE #+ L1_Reg
+
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
 
         print(f"Size {size}, Replicate {replicate}, Attempts: {attempts}")
 
@@ -249,20 +133,19 @@ for size in sizes:
 
         pred_y = odeint(model, train_y0_aug.view(1,1,3), full_t, method='rk4').view(-1,1,3)
 
-        train_SSE = float(torch.sum(torch.square(pred_y[:61,:,:-1] - train_y)))
-        train_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[:61,:,:-1] - train_y))))
+        train_SSE = float(torch.sum(torch.square(pred_y[:train_data_size,:,:-1] - train_y)))
+        train_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[:train_data_size,:,:-1] - train_y))))
 
-        test_SSE = float(torch.sum(torch.square(pred_y[61:,:,:-1] - test_y)))
-        test_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[61:,:,:-1] - test_y))))
+        test_SSE = float(torch.sum(torch.square(pred_y[train_data_size:,:,:-1] - test_y)))
+        test_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[train_data_size:,:,:-1] - test_y))))
         
         Train.append(train_RMSE)
         Test.append(test_RMSE)
         Replicates.append(replicate)
         Size_Record.append(size)
-        Attempts.append(attempts)
         
         torch.save(model,f'Experiments/Seasonal_LV_NODE/Seasonal_LV_NODE_{size}_{replicate}.pt')
 
-df = pd.DataFrame({"Train Loss":Train, "Test Loss": Test, "Replicate": Replicates, "Size":Size_Record, "Attempts":Attempts})
+df = pd.DataFrame({"Train Loss":Train, "Test Loss": Test, "Replicate": Replicates, "Size":Size_Record})
 
 df.to_csv("Experiments/Seasonal_LV_NODE_Results.csv",index=False)

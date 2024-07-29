@@ -15,10 +15,10 @@ if adjoint:
 else:
     from torchdiffeq import odeint
 
+NUM_SAMPLES = 151
+
 gpu=0
-device = torch.device('cuda:' + str(gpu) if torch.cuda.is_available() else 'cpu')
-if torch.cuda.is_available():
-    torch.set_default_tensor_type('torch.cuda.FloatTensor')
+device = torch.device('cpu')
 
 class Seasonal_LV(nn.Module):
     def __init__(self):
@@ -43,7 +43,7 @@ class Seasonal_LV(nn.Module):
         return torch.stack([dS1, dS2, dS3, dT], dim=1).to(device)
 
 true_y0 = torch.tensor([[1.0,1.0,1.0,0.0]]).to(device)
-t = torch.linspace(0., 9., 91).to(device)
+t = torch.linspace(0., 15., NUM_SAMPLES).to(device)
 p = torch.tensor([0.5,1.5,3.0,1.0,1.0]).to(device)
 
 print("Generating data.")
@@ -54,7 +54,7 @@ print("Data generated.")
 ## NOTE: The 4th column of this data is redundant and can be discarded.
 
 # Add noise
-y = gen_y * (1 + torch.randn(91,1,4)/20.)
+y = gen_y * (1 + torch.randn(NUM_SAMPLES,1,4)/20.)
 
 torch.save(y,'Seasonal_LV_data.pt')
 

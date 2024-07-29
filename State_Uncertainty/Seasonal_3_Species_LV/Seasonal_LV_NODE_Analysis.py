@@ -17,7 +17,7 @@ data = torch.load("Seasonal_LV_data.pt")
 
 print(data.shape)
 
-train_data_size = 61 # Training data
+train_data_size = 91 # Training data
 
 train_y = data[:train_data_size,:,[1,2]]
 test_y = data[train_data_size:,:,[1,2]]
@@ -35,7 +35,7 @@ else:
 device = torch.device('cpu')
 
 # Training parameters
-niters=2000       # training iterations
+niters=2000      # training iterations
 #data_size=150     # samples in dataset <- Reduced to 150 from 1000
 batch_time = 32    # steps in batch
 batch_size = 256   # samples per batch
@@ -52,10 +52,10 @@ def get_n_params(model):
     return pp
 
 t0 = 0.
-tf = 9.
-t = torch.linspace(t0, 6.0, train_data_size).to(device)
+tf = 15.
+t = torch.linspace(t0, 9.0, train_data_size).to(device)
 
-full_t = torch.linspace(t0, tf, 91).to(device)
+full_t = torch.linspace(t0, tf, 151).to(device)
 
 #print(full_t.shape)
 #print(data.shape)
@@ -213,7 +213,7 @@ for it in range(1, niters + 1):
     #Need to figure out NN params.
     #print(batch_y.shape)
     #print(pred_y.shape)
-    MAE = torch.mean(torch.abs(pred_y[:,:,:,:-1] - batch_y))
+    MAE = torch.sum(torch.abs(pred_y[:,:,:,:-1] - batch_y))
     #L1_Reg = reg_param*torch.sum(torch.tensor([torch.sum(torch.abs(i)) for i in list(model.parameters())]))
     loss = MAE #+ L1_Reg
     #loss = torch.sum(torch.square(pred_y - batch_y))
@@ -249,8 +249,8 @@ pred_y = odeint(model, train_y0_aug.view(1,1,3), full_t, method='rk4').view(-1,1
 #print(train_y.shape)
 #print(pred_y.shape)
 
-train_SSE = float(torch.sum(torch.square(pred_y[:61,:,:-1] - train_y)))
-train_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[:61,:,:-1] - train_y))))
+train_SSE = float(torch.sum(torch.square(pred_y[:train_data_size,:,:-1] - train_y)))
+train_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[:train_data_size,:,:-1] - train_y))))
 
 #print(train_SSE)
 #print(train_RMSE)
@@ -261,8 +261,8 @@ train_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[:61,:,:-1] - train_
 #print(test_y[150:,:,:])
 #print(pred_y[150:,:,:])
 
-test_SSE = float(torch.sum(torch.square(pred_y[61:,:,:-1] - test_y)))
-test_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[61:,:,:-1] - test_y))))
+test_SSE = float(torch.sum(torch.square(pred_y[train_data_size:,:,:-1] - test_y)))
+test_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[train_data_size:,:,:-1] - test_y))))
 
 print(train_RMSE)
 print(test_RMSE)
