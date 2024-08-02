@@ -66,7 +66,7 @@ tf = 15.
 t = torch.linspace(t0, 9.0, train_data_size).to(device)
 
 # True p
-p = torch.tensor([1.0,1.0,1.0]).to(device)
+p = torch.tensor([1.0,2.0,1.0]).to(device)
 
 # p0 initial guess is at approximate order of magnitude.
 #p0 = torch.tensor([1., 100., 1., 10., 100., 1., 10., 1., 10., 1., 0.1, 0.1, 1., 1.]).to(device)
@@ -93,12 +93,12 @@ attempts = 0
 complete = False
 broken = False
 
-replicates = 50
+replicates = 30
 #sizes = [5, 10, 15, 20, 25, 30]
 #replicates = 2
 #sizes = [15,30]
+#sizes = [5,10,15]#[5, 10, 15, 20, 25, 30]
 sizes = [5, 10, 15, 20, 25, 30]
-
 # We note that we could not avoid numerical instability in training for sizes greater than 15.
 
 Train = []
@@ -109,7 +109,8 @@ Size_Record = []
 
 for size in sizes:
     for replicate in range(replicates):
-        model = unknownhybridODE(p,(3,1,[size,size])).to(device)
+        model = unknownhybridODE(torch.tensor([1.0,2.0,1.0]).to(device),(3,1,[size,size])).to(device)
+        print(list(model.parameters()))
 
         optimizer = optim.Adam(model.parameters(), lr=1e-1)
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1) #optional learning rate scheduler

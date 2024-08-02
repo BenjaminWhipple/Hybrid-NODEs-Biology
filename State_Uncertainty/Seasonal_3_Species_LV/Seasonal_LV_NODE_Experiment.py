@@ -93,7 +93,7 @@ for size in sizes:
 
         model = neuralODE((3,3,[size,size])).to(device)
 
-        optimizer = optim.Adam(model.parameters(), lr=1e-2)
+        optimizer = optim.Adam(model.parameters(), lr=1e-1)
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1) #optional learning rate scheduler
 
         start = time.time()
@@ -119,6 +119,10 @@ for size in sizes:
             optimizer.step()
             scheduler.step()
 
+            if (it) % 500 == 0:
+                print(f'Size: {size}, Replicate: {replicate}, ','Iteration: ', it, '/', niters)
+                print(loss.item())
+
         print(f"Size {size}, Replicate {replicate}, Attempts: {attempts}")
 
         end = time.time()
@@ -138,7 +142,10 @@ for size in sizes:
 
         test_SSE = float(torch.sum(torch.square(pred_y[train_data_size:,:,:-1] - test_y)))
         test_RMSE = float(torch.sqrt(torch.mean(torch.square(pred_y[train_data_size:,:,:-1] - test_y))))
-        
+
+        print(train_RMSE)
+        print(test_RMSE)
+
         Train.append(train_RMSE)
         Test.append(test_RMSE)
         Replicates.append(replicate)

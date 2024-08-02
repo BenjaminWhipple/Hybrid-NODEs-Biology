@@ -22,7 +22,7 @@ DATA_COLOR = "darkgrey"
 t0 = 0.
 
 REPLICATES = 5 # Must be less than 50, as we only ran 50 replicates
-NETWORK_SIZE = 10
+NETWORK_SIZE = 5
 # We should pull the best 30 for simplicity in plotting
 
 NODE_RES = pd.read_csv("Experiments/Seasonal_LV_NODE_Results.csv")
@@ -31,18 +31,20 @@ NODE_RES_BEST = list(NODE_RES[NODE_RES["Size"]==NETWORK_SIZE].nsmallest(REPLICAT
 KNOWN_HYBRID_RES = pd.read_csv("Experiments/Seasonal_LV_KnownParamHybrid_Results.csv")
 KNOWN_HYBRID_RES_BEST = list(KNOWN_HYBRID_RES[KNOWN_HYBRID_RES["Size"]==NETWORK_SIZE].nsmallest(REPLICATES,"Test Loss")["Replicate"])
 
-UNKNOWN_HYBRID_RES = pd.read_csv("Experiments/Seasonal_LV_UnknownParamHybrid_Close_Params_Results.csv")
+UNKNOWN_HYBRID_RES = pd.read_csv("Experiments/Seasonal_LV_UnknownParamHybrid_Results.csv")
 UNKNOWN_HYBRID_RES_BEST = list(UNKNOWN_HYBRID_RES[UNKNOWN_HYBRID_RES["Size"]==NETWORK_SIZE].nsmallest(REPLICATES,"Test Loss")["Replicate"])
+print(UNKNOWN_HYBRID_RES[UNKNOWN_HYBRID_RES["Size"]==NETWORK_SIZE].nsmallest(REPLICATES,"Test Loss")["Test Loss"])
+
 
 print(NODE_RES_BEST)
 print(KNOWN_HYBRID_RES_BEST)
 print(UNKNOWN_HYBRID_RES_BEST)
 
-t_vals = [i for i in range(10)]
-print(t_vals)
+t_vals = [i for i in range(16)]
+#print(t_vals)
 
 data = torch.load("Seasonal_LV_data.pt")
-full_t = torch.linspace(t0, 9.0, 91).to(device)
+full_t = torch.linspace(t0, 15.0, 151).to(device)
 
 train_y0 = data[0,:,[1,2]]
 
@@ -58,7 +60,7 @@ UNKNOWN_HYBRID_PREDS = []
 for i in range(REPLICATES):
     NODE_MODELS.append(torch.load(f"Experiments/Seasonal_LV_NODE/Seasonal_LV_NODE_{NETWORK_SIZE}_{NODE_RES_BEST[i]}.pt"))
     KNOWN_HYBRID_MODELS.append(torch.load(f"Experiments/Seasonal_LV_KnownParamHybrid/Seasonal_LV_KnownParamHybrid_{NETWORK_SIZE}_{KNOWN_HYBRID_RES_BEST[i]}.pt"))
-    UNKNOWN_HYBRID_MODELS.append(torch.load(f"Experiments/Seasonal_LV_UnknownParamHybrid_Close_Params/Seasonal_LV_UnknownParamHybrid_{NETWORK_SIZE}_{UNKNOWN_HYBRID_RES_BEST[i]}.pt"))
+    UNKNOWN_HYBRID_MODELS.append(torch.load(f"Experiments/Seasonal_LV_UnknownParamHybrid/Seasonal_LV_UnknownParamHybrid_{NETWORK_SIZE}_{UNKNOWN_HYBRID_RES_BEST[i]-1}.pt"))
 
 for i in range(REPLICATES):
     train_y0_constant = torch.full((1,1),fill_value=0)
@@ -66,18 +68,18 @@ for i in range(REPLICATES):
     pred_y = odeint(NODE_MODELS[i], train_y0_aug.view(1,1,3), full_t, method='rk4').view(-1,1,3)
     NODE_PREDS.append(pred_y)
 
-    train_y0_constant = torch.full((1,2),fill_value=0)
+    train_y0_constant = torch.full((1,1),fill_value=0)
     train_y0_aug = torch.cat((train_y0, train_y0_constant), dim=1)
-    pred_y = odeint(KNOWN_HYBRID_MODELS[i], train_y0_aug.view(1,1,4), full_t, method='rk4').view(-1,1,4)
+    pred_y = odeint(KNOWN_HYBRID_MODELS[i], train_y0_aug.view(1,1,3), full_t, method='rk4').view(-1,1,3)
     KNOWN_HYBRID_PREDS.append(pred_y)
 
-    pred_y = odeint(KNOWN_HYBRID_MODELS[i], train_y0_aug.view(1,1,4), full_t, method='rk4').view(-1,1,4)
+    pred_y = odeint(UNKNOWN_HYBRID_MODELS[i], train_y0_aug.view(1,1,3), full_t, method='rk4').view(-1,1,3)
     UNKNOWN_HYBRID_PREDS.append(pred_y)
 #print(pred_y[:,0,1])
 
 #print(data[:,0].cpu().numpy()[:,1])
 
-print(data)
+#print(data)
 
 fig, axs = plt.subplots(2,3,figsize=(12,6),layout='constrained',sharex="col",sharey="row")
 
@@ -220,7 +222,7 @@ axs[1,1].set_xlabel("Time")
 #Draw vertical line to indicate the training/testing split.
 for k in range(2):
     for l in range(3):
-        axs[k,l].axvline(x=6, color='red', linestyle=':', linewidth=2)
+        axs[k,l].axvline(x=9, color='red', linestyle=':', linewidth=2)
 
 #plt.tight_layout()
 plt.savefig("Seasonal_LV_PREDICT.pdf")
