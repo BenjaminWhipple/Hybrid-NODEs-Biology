@@ -21,7 +21,7 @@ DATA_COLOR = "darkgrey"
 
 t0 = 0.
 
-REPLICATES = 5 # Must be less than 50, as we only ran 50 replicates
+REPLICATES = 10 # Must be less than 50, as we only ran 50 replicates
 NETWORK_SIZE = 5
 # We should pull the best 30 for simplicity in plotting
 

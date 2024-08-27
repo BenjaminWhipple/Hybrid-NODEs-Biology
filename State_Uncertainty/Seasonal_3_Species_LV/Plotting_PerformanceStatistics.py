@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 KnownHybrid_Results = pd.read_csv("Experiments/Seasonal_LV_KnownParamHybrid_Results.csv")
-UnknownHybrid_Results = pd.read_csv("Experiments/Seasonal_LV_UnknownParamHybrid_Close_Params_Results.csv")
+UnknownHybrid_Results = pd.read_csv("Experiments/Seasonal_LV_UnknownParamHybrid_Results.csv")
 NODE_Results = pd.read_csv("Experiments/Seasonal_LV_NODE_Results.csv")
 
 print(KnownHybrid_Results)
@@ -24,14 +24,16 @@ print(UnknownHybrid_Results.groupby('Size')['Test Loss'].median())
 
 print(NODE_Results.groupby('Size')['Test Loss'].median())
 
-plt.Figure(figsize=(8,4))
-plt.yscale("log")
-plt.title("Median Performance of Models on 3 Species Lotka Volterra")
-plt.plot(sizes,KnownHybrid_summary,'o-',label="Known Parameter Hybrid NODE")
-plt.plot(sizes,UnknownHybrid_summary,'o-',label="Unknown Parameter Hybrid NODE")
-plt.plot(sizes,NODE_summary,'o-',label="Pure NODE")
-plt.xlabel("Neural Network Width")
-plt.ylabel("Root Mean Square Error")
-plt.legend()
-plt.tight_layout()
-plt.savefig("3_LV_ModelPerformance.pdf")
+#plt.Figure(figsize=(8,4))
+fig, ax = plt.subplots(layout='constrained')
+
+ax.set_yscale("log")
+ax.set_title("Median Performance of Models on 3 Species Lotka Volterra")
+ax.plot(sizes,KnownHybrid_summary,'o-',label="Known Parameter Hybrid NODE")
+ax.plot(sizes,UnknownHybrid_summary,'o-',label="Unknown Parameter Hybrid NODE")
+ax.plot(sizes,NODE_summary,'o-',label="Pure NODE")
+ax.set_xlabel("Neural Network Width")
+ax.set_ylabel("Root Mean Square Error")
+fig.legend(loc = "outside lower center")
+#plt.tight_layout()
+fig.savefig("3_LV_ModelPerformance.pdf")
