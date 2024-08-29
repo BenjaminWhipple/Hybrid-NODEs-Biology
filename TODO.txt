@@ -1,3 +1,5 @@
+[] Change naming in State_Uncertainty away from "Seasonal"
+
 [] Implement checkpointing for all models
 
 [] Implement Missing states:
