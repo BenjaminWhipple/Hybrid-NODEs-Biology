@@ -8,7 +8,7 @@ class Unknown_Params_HybridODE(nn.Module):
     def __init__(self, p0, structure):
         super(Unknown_Params_HybridODE, self).__init__()
 
-        self.paramsODE = nn.Parameter(p0)
+        self.paramsODE = nn.Parameter(torch.tensor(p0).to(device))
         self.J0 = self.paramsODE[0]     #mM min-1
         #self.k1 = self.paramsODE[1]     #mM-1 min-1
         self.k2 = self.paramsODE[2]     #mM min-1
