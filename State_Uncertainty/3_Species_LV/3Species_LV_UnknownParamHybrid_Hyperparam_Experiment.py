@@ -146,7 +146,7 @@ for replicate in range(replicates):
              
             pred_y = odeint(model, batch_y0_aug, batch_t, method='rk4')    #It is advised to use a fixed-step solver during training to avoid underflow of dt
             
-            MAE = torch.sum(torch.abs(pred_y[:,:,:,[0,1]] - batch_y))
+            MAE = torch.mean(torch.abs(pred_y[:,:,:,[0,1]] - batch_y))
             loss = MAE #+ L1_Reg
 
             loss.backward()

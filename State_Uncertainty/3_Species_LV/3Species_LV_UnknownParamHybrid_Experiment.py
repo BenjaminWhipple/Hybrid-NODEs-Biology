@@ -11,9 +11,9 @@ import torchdiffeq
 import time
 import sys
 
-from Models.Seasonal_LV_UnknownHybrid import *
+from Models.ThreeSpecies_LV_UnknownHybrid import *
 
-data = torch.load("Seasonal_LV_data.pt")
+data = torch.load("3Species_LV_data.pt")
 
 print(data.shape)
 
@@ -65,8 +65,8 @@ t0 = 0.
 tf = 15.
 t = torch.linspace(t0, 9.0, train_data_size).to(device)
 
-# True p
-p = torch.tensor([1.0,2.0,1.0]).to(device)
+# Initial guess
+p = np.array([1.0,2.0,1.0])
 
 # p0 initial guess is at approximate order of magnitude.
 #p0 = torch.tensor([1., 100., 1., 10., 100., 1., 10., 1., 10., 1., 0.1, 0.1, 1., 1.]).to(device)
@@ -91,12 +91,12 @@ start = time.time()
 
 SIZES = [5,15,25]
 Hyperparameters = pd.read_csv("HyperparameterExperiments/3Species_LV_UnknownParamHybrid_Results.csv")
-summary = Hyperparameters.groupby(['Size', 'Batch Time', 'Batch Size', 'Learning Rate', 'Learning Rate Step', 'Iterations'])["Train Loss"].mean()
+summary = Hyperparameters.groupby(['Size', 'Batch.Time', 'Batch.Size', 'Learning.Rate', 'Learning.Rate.Step', 'Iterations'])["Train.Loss"].mean()
 
 best_params = []
 for size in SIZES:
     temp = Hyperparameters[Hyperparameters["Size"]==size]
-    summary = temp.groupby(['Batch Time', 'Batch Size', 'Learning Rate', 'Learning Rate Step', 'Iterations'])["Train Loss"].mean()
+    summary = temp.groupby(['Batch.Time', 'Batch.Size', 'Learning.Rate', 'Learning.Rate.Step', 'Iterations'])["Train.Loss"].mean()
     best = summary.idxmin()
     best_params.append(best)
 
@@ -104,7 +104,7 @@ attempts = 0
 complete = False
 broken = False
 
-replicates = 30
+replicates = 2
 #sizes = [5, 10, 15, 20, 25, 30]
 #replicates = 2
 #sizes = [15,30]
@@ -118,36 +118,40 @@ Replicates = []
 Size_Record = []
 
 
-for size in sizes:
+for size in SIZES:
+    print(size)
+    print(best_params[SIZES.index(size)])
+    batch_time, batch_size, learning_rate, learning_rate_step, iterations = best_params[SIZES.index(size)]
+    
     for replicate in range(replicates):
-        model = unknownhybridODE(torch.tensor([1.0,2.0,1.0]).to(device),(3,1,[size,size])).to(device)
+        model = unknownhybridODE(torch.tensor([1.0,2.0,1.0]).to(device),(3,1,[size,])).to(device)
         print(list(model.parameters()))
 
-        optimizer = optim.Adam(model.parameters(), lr=1e-1)
-        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1) #optional learning rate scheduler
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=learning_rate_step, gamma=0.1) #optional learning rate scheduler
 
         start = time.time()
 
         #print("Starting training.")
-        for it in range(1, niters + 1):
+        for it in range(1, iterations + 1):
             optimizer.zero_grad()
             batch_y0, batch_t, batch_y = get_batch(batch_time, batch_size,train_data_size)
             
             # For augmented NODE.
-            batch_y0_constant = torch.full((256,1,1),fill_value=0) #For augmented NODE
-            batch_y_constant = torch.full((16,256,1,1),fill_value=0)
+            batch_y0_constant = torch.full((batch_size,1,1),fill_value=0) #For augmented NODE
+            batch_y_constant = torch.full((batch_time,batch_size,1,1),fill_value=0)
             
             batch_y0_aug = torch.cat((batch_y0, batch_y0_constant), dim=2)
             
             pred_y = odeint(model, batch_y0_aug, batch_t, method='rk4')
-            loss = torch.sum(torch.abs(pred_y[:,:,:,[0,1]] - batch_y))
+            loss = torch.mean(torch.abs(pred_y[:,:,:,[0,1]] - batch_y))
 
             loss.backward()
             optimizer.step()
             scheduler.step()
 
-            if (it) % 500 == 0:
-                print(f'Size: {size}, Replicate: {replicate}, ','Iteration: ', it, '/', niters)
+            if (it) % 100 == 0:
+                print(f'Size: {size}, Replicate: {replicate}, ','Iteration: ', it, '/', iterations)
                 print(loss.item())
 
 
@@ -184,9 +188,9 @@ for size in sizes:
         Replicates.append(replicate)
         Size_Record.append(size)
         
-        torch.save(model,f'Experiments/Seasonal_LV_UnknownParamHybrid/Seasonal_LV_UnknownParamHybrid_{size}_{replicate}.pt')
+        torch.save(model,f'Experiments/3Species_LV_UnknownParamHybrid/3Species_LV_UnknownParamHybrid_{size}_{replicate}.pt')
         print(f'Size: {size}, Replicate: {replicate}')
 
 df = pd.DataFrame({"Train Loss":Train, "Test Loss": Test, "Replicate": Replicates, "Size":Size_Record})
 
-df.to_csv("Experiments/Seasonal_LV_UnknownParamHybrid_Results.csv",index=False)
+df.to_csv("Experiments/3Species_LV_UnknownParamHybrid_Results.csv",index=False)

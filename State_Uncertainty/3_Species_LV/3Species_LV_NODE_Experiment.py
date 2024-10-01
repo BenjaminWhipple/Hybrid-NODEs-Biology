@@ -73,54 +73,66 @@ start = time.time()
 ### Generate ensemble of candidate models
 #complete = False
 
+SIZES = [5,15,25]
+Hyperparameters = pd.read_csv("HyperparameterExperiments/3Species_LV_NODE_Results.csv")
+summary = Hyperparameters.groupby(['Size', 'Batch.Time', 'Batch.Size', 'Learning.Rate', 'Learning.Rate.Step', 'Iterations'])["Train.Loss"].mean()
+
+best_params = []
+for size in SIZES:
+    temp = Hyperparameters[Hyperparameters["Size"]==size]
+    summary = temp.groupby(['Batch.Time', 'Batch.Size', 'Learning.Rate', 'Learning.Rate.Step', 'Iterations'])["Train.Loss"].mean()
+    best = summary.idxmin()
+    best_params.append(best)
+
 attempts = 0
 complete = False
 broken = False
 
-replicates = 50
-sizes =  [5, 10, 15, 20, 25, 30]
-#replicates = 2
-#sizes = [5,10]
-##sizes = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+replicates = 2
 
 Train = []
 Test = []
 Replicates = []
 Size_Record = []
 
-for size in sizes:
+for size in SIZES:
+    print(size)
+    print(best_params[SIZES.index(size)])
+    batch_time, batch_size, learning_rate, learning_rate_step, iterations = best_params[SIZES.index(size)]
+    
+
     for replicate in range(replicates):
 
-        model = neuralODE((3,3,[size,size])).to(device)
+        model = neuralODE((3,3,[size,])).to(device)
 
-        optimizer = optim.Adam(model.parameters(), lr=1e-1)
-        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.1) #optional learning rate scheduler
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=learning_rate_step, gamma=0.1) #optional learning rate scheduler
 
         start = time.time()
 
         #print("Starting training.")
-        for it in range(1, niters + 1):
+        for it in range(1, iterations + 1):
             optimizer.zero_grad()
             batch_y0, batch_t, batch_y = get_batch(batch_time, batch_size,train_data_size)
             #print(batch_y.shape)
             
-            batch_y0_constant = torch.full((256,1,1),fill_value=0) #For augmented NODE
-            batch_y_constant = torch.full((16,256,1,1),fill_value=0)
+            batch_y0_constant = torch.full((batch_size,1,1),fill_value=0) #For augmented NODE
+            batch_y_constant = torch.full((batch_time,batch_size,1,1),fill_value=0)
             
             batch_y0_aug = torch.cat((batch_y0, batch_y0_constant), dim=2)
             #batch_y_aug = torch.cat((batch_y, batch_y_constant), dim=3)
              
             pred_y = odeint(model, batch_y0_aug, batch_t, method='rk4')    #It is advised to use a fixed-step solver during training to avoid underflow of dt
             
-            MAE = torch.sum(torch.abs(pred_y[:,:,:,:-1] - batch_y))
+            MAE = torch.mean(torch.abs(pred_y[:,:,:,:-1] - batch_y))
             loss = MAE #+ L1_Reg
 
             loss.backward()
             optimizer.step()
             scheduler.step()
 
-            if (it) % 500 == 0:
-                print(f'Size: {size}, Replicate: {replicate}, ','Iteration: ', it, '/', niters)
+            if (it) % 100 == 0:
+                print(f'Size: {size}, Replicate: {replicate}, ','Iteration: ', it, '/', iterations)
                 print(loss.item())
 
         print(f"Size {size}, Replicate {replicate}, Attempts: {attempts}")
