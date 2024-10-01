@@ -89,6 +89,17 @@ start = time.time()
 ### Generate ensemble of candidate models
 #complete = False
 
+SIZES = [5,15,25]
+Hyperparameters = pd.read_csv("HyperparameterExperiments/3Species_LV_UnknownParamHybrid_Results.csv")
+summary = Hyperparameters.groupby(['Size', 'Batch Time', 'Batch Size', 'Learning Rate', 'Learning Rate Step', 'Iterations'])["Train Loss"].mean()
+
+best_params = []
+for size in SIZES:
+    temp = Hyperparameters[Hyperparameters["Size"]==size]
+    summary = temp.groupby(['Batch Time', 'Batch Size', 'Learning Rate', 'Learning Rate Step', 'Iterations'])["Train Loss"].mean()
+    best = summary.idxmin()
+    best_params.append(best)
+
 attempts = 0
 complete = False
 broken = False

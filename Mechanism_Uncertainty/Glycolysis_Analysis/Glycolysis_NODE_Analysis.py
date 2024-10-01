@@ -86,7 +86,7 @@ attempts = 0
 complete = False
 broken = False
 
-replicates = 3
+replicates = 30
 
 Train = []
 Test = []
