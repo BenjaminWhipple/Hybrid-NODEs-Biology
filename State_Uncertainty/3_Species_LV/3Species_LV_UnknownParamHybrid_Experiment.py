@@ -104,7 +104,7 @@ attempts = 0
 complete = False
 broken = False
 
-replicates = 2
+replicates = 30
 #sizes = [5, 10, 15, 20, 25, 30]
 #replicates = 2
 #sizes = [15,30]
