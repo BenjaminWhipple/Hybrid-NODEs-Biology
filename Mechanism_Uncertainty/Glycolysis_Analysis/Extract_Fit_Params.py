@@ -20,7 +20,7 @@ DATA_COLOR = "darkgrey"
 
 t0 = 0.
 
-REPLICATES = 30 # Must be less than 50, as we only ran 50 replicates
+REPLICATES = 2 # Must be less than 50, as we only ran 50 replicates
 SIZES = [5,15,25]
 # We should pull the best 30 for simplicity in plotting
 
@@ -33,29 +33,19 @@ KNOWN_HYBRID_PREDS = []
 UNKNOWN_HYBRID_MODELS = []
 UNKNOWN_HYBRID_PREDS = []
 
-for NETWORK_SIZE in SIZES:
-    for i in range(REPLICATES):
-        NODE_MODELS.append(torch.load(f"Experiments/Glycolysis_NODE_Models/Glycolysis_NODE_{NETWORK_SIZE}_{i}.pt"))
-        KNOWN_HYBRID_MODELS.append(torch.load(f"Experiments/Glycolysis_KnownParamHybrid_Models/Glycolysis_KnownParamHybrid_{NETWORK_SIZE}_{i}.pt"))
-        UNKNOWN_HYBRID_MODELS.append(torch.load(f"Experiments/Glycolysis_UnknownParamHybrid_Models/Glycolysis_UnknownParamHybrid_{NETWORK_SIZE}_{i}.pt"))
-
-param_names = ["J0","k1","k2","k3","k4","k5","k6","k","kappa","q","K1","psi","N","A"]
-
 params = []
 
-sizes = []
 for NETWORK_SIZE in SIZES:
     for i in range(REPLICATES):
-        sizes.append(NETWORK_SIZE)
-        params.append(list(UNKNOWN_HYBRID_MODELS[i].parameters())[0].detach().numpy())
+        temp = torch.load(f"Experiments/Glycolysis_UnknownParamHybrid_Models/Glycolysis_UnknownParamHybrid_{NETWORK_SIZE}_{i}.pt")
+        UNKNOWN_HYBRID_MODELS.append(temp)
+        #print(replicate)
+        print(list(UNKNOWN_HYBRID_MODELS[i].parameters())[0].detach().numpy())
+        params.append(temp)
 
-print(np.array(params))
+param_names = ["J0","k1","k2","k3","k4","k5","k6","k","kappa","q","K1","psi","N","A"]
 
 df = pd.DataFrame(data=np.array(params),columns=param_names)
 
 df["Size"]=sizes
-print(df)
 df.to_csv("Fit_Parameters.csv",index=False)
-
-# This is how we would generate symbolic regression stuff.
-print(UNKNOWN_HYBRID_MODELS[0].net(torch.tensor([0.0,0.0,0.0,0.0,0.0,0.0,0.0])))
