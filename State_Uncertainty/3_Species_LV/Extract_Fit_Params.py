@@ -39,26 +39,23 @@ KNOWN_HYBRID_PREDS = []
 UNKNOWN_HYBRID_MODELS = []
 UNKNOWN_HYBRID_PREDS = []
 
+params = []
+sizes = []
+
 for NETWORK_SIZE in SIZES:
     for i in range(REPLICATES):
-        UNKNOWN_HYBRID_MODELS.append(torch.load(f"Experiments/3Species_LV_UnknownParamHybrid/3Species_LV_UnknownParamHybrid_{NETWORK_SIZE}_{i}.pt"))
+        temp = torch.load(f"Experiments/3Species_LV_UnknownParamHybrid/3Species_LV_UnknownParamHybrid_{NETWORK_SIZE}_{i}.pt")
+        
+        print(list(temp.parameters())[0].detach().numpy())
+        params.append(list(temp.parameters())[0].detach().numpy())
+        sizes.append(NETWORK_SIZE)
 
 param_names = ["beta","gamma","delta"]
-
-params = []
-
-sizes = []
-for NETWORK_SIZE in SIZES:
-    for i in range(REPLICATES):
-        sizes.append(NETWORK_SIZE)
-        params.append(list(UNKNOWN_HYBRID_MODELS[i].parameters())[0].detach().numpy())
-
-print(np.array(params))
 
 df = pd.DataFrame(data=np.array(params),columns=param_names)
 
 df["Size"]=sizes
+
 print(df)
 df.to_csv("Fit_Parameters.csv",index=False)
-
 

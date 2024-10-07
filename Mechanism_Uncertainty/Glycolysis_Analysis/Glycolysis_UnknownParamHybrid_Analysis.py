@@ -186,6 +186,8 @@ for size in SIZES:
         Size_Record.append(size)
         Attempts.append(attempts)
         
+        print(list(model.parameters())[0].detach().numpy())
+        
         torch.save(model,f'Experiments/Glycolysis_UnknownParamHybrid_Models/Glycolysis_UnknownParamHybrid_{size}_{replicate}.pt')
 
 df = pd.DataFrame({"Train Loss":Train, "Test Loss": Test, "Replicate": Replicates, "Size":Size_Record, "Attempts":Attempts})
