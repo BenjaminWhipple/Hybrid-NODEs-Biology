@@ -1,15 +1,8 @@
-[] Change naming in State_Uncertainty away from "Seasonal"
+[] Reorganize code throughout.
 
-[] Implement checkpointing for all models
 
-[] Implement Missing states:
-    [] Glycolysis:
-        [] Draft
-            [] Hybrid Known
-            [] Hybrid Unknown
-            [] NODE
-        [] Update above with checkpointing.
-        [] Tests
-            [] Hybrid Known
-            [] Hybrid Unknown
-            [] NODE
+[] Figure out how to more directly integrate neural network into diffeq.
+
+### Incorporating Known Parameters
+- Quantify challenges with stiffness
+- Compare results betweeen stiff and non-stiff.
