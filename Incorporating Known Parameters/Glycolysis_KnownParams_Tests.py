@@ -14,7 +14,6 @@ import json
 
 from torchdiffeq import odeint
 
-
 from Models.Glycolysis.Glycolysis_True import glycolysis
 from Models.Glycolysis.Glycolysis_KnownParam_Hybrid import Known_Params_HybridODE
 from Models.Glycolysis.Glycolysis_UnknownParam_Hybrid import Unknown_Params_HybridODE
@@ -41,10 +40,10 @@ train_data_size=150
 full_data_size = int(1.5*train_data_size)+1
 
 true_y0 = torch.tensor([[1.6, 1.5, 0.2, 0.35, 0.3, 2.67, 0.1]]).to(device)
-t = torch.linspace(0., 6., int((3/2)*train_data_size)+1).to(device)
+t = torch.linspace(0., 6., full_data_size).to(device)
 p = np.array([2.5, 100., 6., 16., 100., 1.28, 12., 1.8, 13., 4., 0.52, 0.1, 1., 4.])
 #p_guess = np.array([1.0, 100., 6., 16., 100., 1.28, 12., 1.8, 13., 4., 0.52, 0.1, 1., 4.])
-p_guess = p+np.sqrt(0.5*p)*np.random.randn(len(p)) # These correspond to roughly Order of magnitude estimates
+p_guess = p+np.sqrt(0.25*p)*np.random.randn(len(p)) # These correspond to roughly Order of magnitude estimates
 print(p_guess)
 full_t = torch.linspace(0.0, 6.0, full_data_size).to(device)
 

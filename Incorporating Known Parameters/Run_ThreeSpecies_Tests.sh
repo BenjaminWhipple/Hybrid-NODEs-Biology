@@ -5,12 +5,13 @@ N=30
 
 # Arrays of hyper-parameters
 learning_rates=(0.1)
-#batch_times=(32 64)
-#batch_times=(32)
-batch_times=(64)
+batch_times=(32 64)
 network_sizes=(5 15 25)
 
-script=Glycolysis_KnownParams_Tests.py
+#batch_times=(32 64)
+#network_sizes=(5 15 25)
+
+script=ThreeSpecies_LV_KnownParams_Tests.py
 
 start_time=$(date +%s)
 
@@ -18,7 +19,7 @@ start_time=$(date +%s)
 for lr in "${learning_rates[@]}"; do
     for batch in "${batch_times[@]}"; do
         for width in "${network_sizes[@]}"; do
-            for (( i=1; i<=N; i++ )); do
+            for (( i=11; i<=N; i++ )); do
                 small_start_time=$(date +%s)
 
                 echo "Running replicate $i for learning rate $lr and batch time $batch and network width $width"
