@@ -3,7 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 glycolysis_params = ["J0","k2","k3","k4","k5","k6","k","kappa","psi","N","A"]
+glycolysis_params_names = ["$J_0$","$k_2$","$k_3$","$k_4$","$k_5$","$k_6$","$k$","$\kappa$","$\psi$","$N$","$A$"]
+threespecies_params_names = [r"$\beta$",r"$\gamma$",r"$\delta$"]
+
 threespecies_params = ["beta","gamma","delta"]
+
+COLOR = "darkorange"
 
 def lower_half_median(x):
 	x_sorted = x.sort_values()
@@ -137,8 +142,8 @@ fig, ax = plt.subplots(1,2,sharey=True)
 y_positions = range(len(models))
 
 ax[0].set_title("Glycolysis")
-ax[0].hlines(y=y_positions, xmin=[i[1] for i in glycoylsis_values], xmax=[i[2] for i in glycoylsis_values], color='royalblue')
-ax[0].scatter([i[0] for i in glycoylsis_values], y_positions, color='royalblue', zorder=3)  # Add median points
+ax[0].hlines(y=y_positions, xmin=[i[1] for i in glycoylsis_values], xmax=[i[2] for i in glycoylsis_values], color=COLOR)
+ax[0].scatter([i[0] for i in glycoylsis_values], y_positions, color=COLOR, zorder=3)  # Add median points
 ax[0].set_xscale("log")
 ax[0].set_yticks(y_positions)
 ax[0].set_yticklabels(models)
@@ -146,8 +151,8 @@ ax[0].set_xlabel('RMSE on Test Set')
 ax[0].set_xticks([1e-2,1e-1,1e-0])
 
 ax[1].set_title("Three Species Lotka Volterra")
-ax[1].hlines(y=y_positions, xmin=[i[1] for i in threespecies_values], xmax=[i[2] for i in threespecies_values], color='royalblue')
-ax[1].scatter([i[0] for i in threespecies_values], y_positions, color='royalblue', zorder=3)  # Add median points
+ax[1].hlines(y=y_positions, xmin=[i[1] for i in threespecies_values], xmax=[i[2] for i in threespecies_values], color=COLOR)
+ax[1].scatter([i[0] for i in threespecies_values], y_positions, color=COLOR, zorder=3)  # Add median points
 ax[1].set_xlabel('RMSE on Test Set')
 ax[1].set_xscale("log")
 ax[1].set_xticks([1e-2,1e-1,1e-0])
@@ -167,13 +172,16 @@ percentile_list = []
 for param in glycolysis_params:
 	percentile_list.append(list(percentiles(glycolysis_best_parameter_fits[param+"_percent_err"])))
 
+
+
 ax.set_title("Glycolysis Parameter Estimate Accuracy")
-ax.hlines(y=y_positions,xmin=[i[0] for i in percentile_list],xmax=[i[2] for i in percentile_list],color="royalblue")
-ax.scatter([i[1] for i in percentile_list],y_positions,color="royalblue",zorder=3)
+ax.hlines(y=y_positions,xmin=[i[0] for i in percentile_list],xmax=[i[2] for i in percentile_list],color=COLOR)
+ax.scatter([i[1] for i in percentile_list],y_positions,color=COLOR,zorder=3)
 ax.set_xscale("log")
 ax.set_yticks(y_positions)
-ax.set_yticklabels(glycolysis_params)
-ax.set_xlabel("Percent Error")
+ax.set_yticklabels(glycolysis_params_names)
+ax.set_xlabel(r"Relative Parameter Error: $|\hat{\theta}-\theta_{\text{true}}|/\theta_{\text{true}}$")
+fig.tight_layout()
 plt.savefig("Glycolysis_ParameterEstimate_Accuracy.png")
 
 # Three Species Lotka-Volterra
@@ -184,10 +192,11 @@ for param in threespecies_params:
 	percentile_list.append(list(percentiles(threespecies_best_parameter_fits[param+"_percent_err"])))
 
 ax.set_title("Three Species Lotka-Volterra Parameter Estimate Accuracy")
-ax.hlines(y=y_positions,xmin=[i[0] for i in percentile_list],xmax=[i[2] for i in percentile_list],color="royalblue")
-ax.scatter([i[1] for i in percentile_list],y_positions,color="royalblue",zorder=3)
+ax.hlines(y=y_positions,xmin=[i[0] for i in percentile_list],xmax=[i[2] for i in percentile_list],color=COLOR)
+ax.scatter([i[1] for i in percentile_list],y_positions,color=COLOR,zorder=3)
 ax.set_xscale("log")
 ax.set_yticks(y_positions)
-ax.set_yticklabels(threespecies_params)
-ax.set_xlabel("Percent Error")
+ax.set_yticklabels(threespecies_params_names)
+ax.set_xlabel(r"Relative Parameter Error: $|\hat{\theta}-\theta_{\text{true}}|/\theta_{\text{true}}$")
+fig.tight_layout()
 plt.savefig("ThreeSpecies_ParameterEstimate_Accuracy.png")

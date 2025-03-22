@@ -46,8 +46,8 @@ t = torch.linspace(0., 15., NUM_SAMPLES).to(device)
 p = torch.tensor([0.5,1.5,3.0,1.0,1.0]).to(device)
 
 p_true_missing = np.array([1.5,3.0,1.0])
-p_guess = p_true_missing+np.sqrt(0.25*p_true_missing)*np.random.randn(len(p_true_missing))
-
+#p_guess = p_true_missing+np.sqrt(0.25*p_true_missing)*np.random.randn(len(p_true_missing))
+p_guess = np.array([1.0,1.0,1.0])
 print(p_guess)
 
 t0 = 0.
@@ -56,7 +56,7 @@ tf = 15.
 full_t = torch.linspace(t0, tf, NUM_SAMPLES).to(device)
 
 MAX_ATTEMPTS = 50
-PARAM_SAMPLES = 10
+PARAM_SAMPLES = 11
 
 iterations=1000
 
@@ -73,7 +73,7 @@ mech_param_dictionary = {
 }
 
 mech_params = ["beta","gamma","delta"]
-param_ranges = [[np.log10(mech_param_dictionary[param])-0.25,np.log10(mech_param_dictionary[param])+0.25] for param in mech_params]
+param_ranges = [[np.log10(mech_param_dictionary[param])-1.5,np.log10(mech_param_dictionary[param])+1.5] for param in mech_params]
 this_param_range = param_ranges[parameter_index]
 current_param_values = np.linspace(this_param_range[0],this_param_range[1],PARAM_SAMPLES)
 
@@ -134,7 +134,9 @@ if __name__ == "__main__":
         broken = False
         attempts = 0
 
-        while complete == False:
+        while complete == False and attempts < 50:
+            attempts += 1
+            print(attempts)
             if attempts < MAX_ATTEMPTS:
                 unknown_model = UnknownParam_HNDE(p_guess,(3,1,[5,])).to(device)
 

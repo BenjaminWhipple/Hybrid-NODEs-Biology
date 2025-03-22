@@ -7,8 +7,8 @@ from sklearn.gaussian_process.kernels import Matern, WhiteKernel
 TODO: Make plots dropping NA values first. Lets see what happens
 """
 
-glycolysis_df = pd.read_csv("SerializedObjects/DataFrames/Glycolysis_Full.csv").dropna()
-threespecies_df = pd.read_csv("SerializedObjects/DataFrames/ThreeSpecies_Full.csv").dropna()
+glycolysis_df = pd.read_csv("SerializedObjects/DataFrames/Glycolysis_Full.csv").fillna(1.0)
+threespecies_df = pd.read_csv("SerializedObjects/DataFrames/ThreeSpecies_Full.csv").fillna(1.0)
 print(glycolysis_df)
 print(threespecies_df)
 
@@ -23,12 +23,14 @@ threespecies_params = ["beta","gamma","delta"]
 threespecies_params_names = [r"\beta",r"\gamma",r"\delta"]
 threespecies_p = np.array([1.5,3.0,1.0])
 
+glycolysis_param_idxs = [int(i) for i in list(glycolysis_df["parameter-index"].unique())]
+threespecies_param_idxs = [int(i) for i in list(threespecies_df["parameter-index"].unique())]
 #reg_params = list(glycolysis_df["reg-param"].unique())
 #print(reg_params)
-small_reg_params = [0.0,1.0]
+small_reg_params = [0.0]
 colors = ["darkorange","firebrick"]
 
-for i in range(len(glycolysis_params)):
+for i in glycolysis_param_idxs:
 	print(glycolysis_params[i])
 	subdf = glycolysis_df[glycolysis_df["parameter-index"] == i]
 
@@ -38,32 +40,37 @@ for i in range(len(glycolysis_params)):
 		param = small_reg_params[j]
 
 		subsubdf = subdf[subdf["reg-param"]==param]
+		print(subsubdf)
+		if len(subsubdf)!=0:
 
-		ys = np.log10(subsubdf["unknown_param_train_rmse"]).to_numpy()
-		#xs = np.log10(subsubdf[f"{glycolysis_params[i]}_fit"]).to_numpy()
-		xs = subsubdf[f"{glycolysis_params[i]}_fit"].to_numpy()
+			ys = np.log10(subsubdf["unknown_param_train_rmse"]).to_numpy()
+			#xs = np.log10(subsubdf[f"{glycolysis_params[i]}_fit"]).to_numpy()
+			xs = subsubdf[f"{glycolysis_params[i]}_fit"].to_numpy()
 
-		kernel = Matern(length_scale_bounds=(1e0, 5e1),nu=1.5) + WhiteKernel()
-		gaussian_process = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=20)
-		print(xs.reshape(-1,1))
-		print(ys.reshape(-1,1))
-		gaussian_process.fit(xs.reshape(-1,1), ys.reshape(-1,1))
-		predict_points = np.linspace(min(xs),max(xs),100)
-		mean_prediction, std_prediction = gaussian_process.predict(predict_points.reshape(-1,1), return_std=True)
+			kernel = Matern(length_scale_bounds=(1e0, 5e1),nu=1.5) + WhiteKernel()
+			gaussian_process = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=20,normalize_y = True)
+			#print(xs.reshape(-1,1))
+			#print(ys.reshape(-1,1))
+			gaussian_process.fit(xs.reshape(-1,1), ys.reshape(-1,1))
+			predict_points = np.linspace(min(xs),max(xs),100)
+			mean_prediction, std_prediction = gaussian_process.predict(predict_points.reshape(-1,1), return_std=True)
 
-		plt.title(f"Glycolysis HNDE: ${glycolysis_params_names[i]}$ Profile Likelihood by $L_1$ Regularization")
-		plt.ylabel("$\log_{10}$ RMSE")
-		plt.xlabel(f"${glycolysis_params_names[i]}$")
-		plt.plot(predict_points,mean_prediction,color=colors[j],label=f"$ \lambda_1 = {param}$ ")
-		#plt.plot(xs,ys,linestyle="None",marker="o",color=colors[j],alpha=0.5)
-		#plt.yscale("log")
+			plt.title(f"Glycolysis HNDE: ${glycolysis_params_names[i]}$ Profile Likelihood by $L_1$ Regularization")
+			plt.ylabel("$\log_{10}$ RMSE")
+			plt.xlabel(f"${glycolysis_params_names[i]}$")
+			plt.plot(predict_points,mean_prediction,color=colors[j],label=f"$ \lambda_1 = {param}$ ")
+			plt.xscale("log")
+			#plt.plot(xs,ys,linestyle="None",marker="o",color=colors[j],alpha=0.5)
+			#plt.yscale("log")
+		else:
+			continue
 
 	plt.axvline(x=glycolysis_p[i],label=f"True ${glycolysis_params_names[i]}$",color="salmon",linestyle="--")
 	plt.legend()
 
 	plt.savefig(f"Images/glycolysis_{glycolysis_params[i]}_likelihood_profile.png")
 
-for i in range(len(threespecies_params)):
+for i in threespecies_param_idxs:
 	print(threespecies_params[i])
 	subdf = threespecies_df[threespecies_df["parameter-index"] == i]
 
@@ -90,6 +97,8 @@ for i in range(len(threespecies_params)):
 		plt.ylabel("$\log_{10}$ RMSE")
 		plt.xlabel(f"${threespecies_params_names[i]}$")
 		plt.plot(predict_points,mean_prediction,color=colors[j],label=f"$ \lambda_1 = {param}$ ",)
+		plt.xscale("log")
+
 		#plt.plot(xs,ys,linestyle="None",marker="o",color=colors[j],alpha=0.5)
 		#plt.yscale("log")
 
